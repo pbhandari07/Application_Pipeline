@@ -1,0 +1,70 @@
+name: React Application CI-CD
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  AZURE_WEBAPP_NAME: pankaj-react-todo-app
+
+jobs:
+
+  # =========================
+  # 1. BUILD STAGE
+  # =========================
+  build:
+    name: React Application Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build React Application
+        run: npm run build
+
+      - name: Upload React Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-build
+          path: build
+
+
+  # =========================
+  # 2. DEPLOY STAGE
+  # =========================
+  deploy:
+    name: Deploy React Application
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download React Build
+        uses: actions/download-artifact@v4
+        with:
+          name: react-build
+          path: build
+
+      - name: Azure Login
+        uses: azure/login@v3
+        with:
+          creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: ./build
