@@ -20,15 +20,21 @@ jobs:
     name: React Application Build
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./ReactTodoUIMonolith
+
     steps:
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 20
           cache: npm
+          cache-dependency-path: ReactTodoUIMonolith/package-lock.json
 
       - name: Install Dependencies
         run: npm ci
@@ -36,11 +42,11 @@ jobs:
       - name: Build React Application
         run: npm run build
 
-      - name: Upload React Build
+      - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: react-build
-          path: build
+          path: ReactTodoUIMonolith/build
 
 
   # =========================
@@ -52,16 +58,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download React Build
+
+      - name: Download Build Artifact
         uses: actions/download-artifact@v4
         with:
           name: react-build
-          path: build
+          path: ./build
 
       - name: Azure Login
-        uses: azure/login@v3
+        uses: azure/login@v2
         with:
-          creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
+          auth-type: SERVICE_PRINCIPAL
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
 
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
