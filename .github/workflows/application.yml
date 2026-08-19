@@ -71,3 +71,5 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           package: ./build
+
+  #make this job run only when the PR is merged to main
