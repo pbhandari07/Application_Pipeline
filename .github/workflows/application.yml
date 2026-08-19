@@ -10,7 +10,7 @@ permissions:
   id-token: write
 
 env:
-  AZURE_WEBAPP_NAME: pankaj-react-todo-app
+  AZURE_WEBAPP_NAME: pankaj-react-todo
 
 jobs:
 
@@ -67,7 +67,7 @@ jobs:
           path: ./build
 
       # =========================
-      # AZURE LOGIN
+      # AZURE OIDC LOGIN
       # =========================
       - name: Azure Login
         uses: azure/login@v2
@@ -77,22 +77,10 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       # =========================
-      # VERIFY AZURE WEB APP
-      # =========================
-      - name: Verify Azure Web App
-        run: |
-          az account show
-          echo "Available Web Apps:"
-          az webapp list \
-            --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
-            --output table
-
-      # =========================
-      # DEPLOY TO AZURE
+      # DEPLOY TO AZURE APP SERVICE
       # =========================
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          resource-group-name: Alan-Walker
           package: ./build
