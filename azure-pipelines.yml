@@ -1,21 +1,72 @@
-# Node.js
-# Build a general Node.js project with npm.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
-
 trigger:
-- main
+  branches:
+    include:
+      - main
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
+
+variables:
+  AZURE_WEBAPP_NAME: 'pankaj-react-todo'
 
 steps:
+
+# =========================
+# Checkout Code
+# =========================
+- checkout: self
+  displayName: 'Checkout Code'
+
+
+# =========================
+# Install Node.js
+# =========================
 - task: NodeTool@0
+  displayName: 'Install Node.js'
   inputs:
     versionSpec: '20.x'
-  displayName: 'Install Node.js'
 
-- script: |
-    npm install
-    npm run build
-  displayName: 'npm install and build'
+
+# =========================
+# Install Dependencies
+# =========================
+- task: CmdLine@2
+  displayName: 'npm install'
+  inputs:
+    script: |
+      npm ci
+    workingDirectory: '$(Build.SourcesDirectory)/ReactTodoUIMonolith'
+
+
+# =========================
+# Build React Application
+# =========================
+- task: CmdLine@2
+  displayName: 'Build React Application'
+  inputs:
+    script: |
+      npm run build
+    workingDirectory: '$(Build.SourcesDirectory)/ReactTodoUIMonolith'
+
+
+# =========================
+# Publish React Build
+# =========================
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish React Build'
+  inputs:
+    PathtoPublish: '$(Build.SourcesDirectory)/ReactTodoUIMonolith/build'
+    ArtifactName: 'react-build'
+    publishLocation: 'Container'
+
+
+# =========================
+# Deploy to Azure App Service
+# =========================
+- task: AzureWebApp@1
+  displayName: 'Deploy to Azure App Service'
+  inputs:
+    azureSubscription: 'kangna_ranawat'
+    appType: 'webAppLinux'
+    appName: '$(AZURE_WEBAPP_NAME)'
+    package: '$(Build.SourcesDirectory)/ReactTodoUIMonolith/build'
