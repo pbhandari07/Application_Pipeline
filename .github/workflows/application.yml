@@ -66,6 +66,9 @@ jobs:
           name: react-build
           path: ./build
 
+      # =========================
+      # AZURE LOGIN
+      # =========================
       - name: Azure Login
         uses: azure/login@v2
         with:
@@ -73,6 +76,20 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      # =========================
+      # VERIFY AZURE WEB APP
+      # =========================
+      - name: Verify Azure Web App
+        run: |
+          az account show
+          echo "Available Web Apps:"
+          az webapp list \
+            --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
+            --output table
+
+      # =========================
+      # DEPLOY TO AZURE
+      # =========================
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
